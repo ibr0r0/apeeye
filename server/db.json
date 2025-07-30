@@ -1,0 +1,40 @@
+{
+  "endpoints": [
+    {
+      "method": "GET",
+      "url": "/me",
+      "response": "{\n  \"id\": 1,\n  \"username\": \"ibr0r\",\n  \"type\": \"human\",\n  \"about\": \"Just a regular person who codes.\",\n  \"status\": \"online\"\n}\n",
+      "id": 1753889800643
+    },
+    {
+      "method": "POST",
+      "url": "/success",
+      "response": "{\n  \"success\": true,\n  \"message\": \"Item deleted\"\n}",
+      "id": 1753890428320
+    },
+    {
+      "method": "PUT",
+      "url": "/mmm",
+      "response": "{\"id\":1,\"username\":\"ibr0r\",\"type\":\"human\",\"about\":\"Just a regular person who codes.\",\"status\":\"online\"}",
+      "id": 1753890445323
+    },
+    {
+      "method": "GET",
+      "url": "/mmm",
+      "response": "{\"id\":1,\"username\":\"ibr0r\",\"type\":\"human\",\"about\":\"Just a regular person who codes.\",\"status\":\"online\"}",
+      "id": 1753890455369
+    },
+    {
+      "method": "PATCH",
+      "url": "/id",
+      "response": "{\"id\":1,\"username\":\"ibr0r\",\"type\":\"human\",\"about\":\"Just a regular person who codes.\",\"status\":\"online\"}",
+      "id": 1753890490228
+    },
+    {
+      "method": "DELETE",
+      "url": "/id",
+      "response": "{\n  \"error\": \"Not found\",\n  \"code\": 404\n}",
+      "id": 1753890512257
+    }
+  ]
+}
