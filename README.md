@@ -84,6 +84,8 @@ If you find a bug, want a feature, or feel like improving something... open an i
 - Keep it simple and clean.
 - Make sure the app still works locally after your changes.
 - If you're adding a feature, explain it clearly in your PR.
+
+
 Thanks for helping improve **Apeeye** 🙌
 
 ---
