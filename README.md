@@ -43,9 +43,13 @@ That's it. Open the browser and start mocking.
 5.Access your mock API at:
 
 http://localhost:34567/mock/users
+
 http://localhost:34567/mock/posts
+
 http://localhost:34567/mock/comments
+
 http://localhost:34567/mock/products
+
 http://localhost:34567/mock/orders
 
 
