@@ -1,40 +1,22 @@
 {
-  "endpoints": [
-    {
-      "method": "GET",
-      "url": "/me",
-      "response": "{\n  \"id\": 1,\n  \"username\": \"ibr0r\",\n  \"type\": \"human\",\n  \"about\": \"Just a regular person who codes.\",\n  \"status\": \"online\"\n}\n",
-      "id": 1753889800643
-    },
-    {
-      "method": "POST",
-      "url": "/success",
-      "response": "{\n  \"success\": true,\n  \"message\": \"Item deleted\"\n}",
-      "id": 1753890428320
-    },
-    {
-      "method": "PUT",
-      "url": "/mmm",
-      "response": "{\"id\":1,\"username\":\"ibr0r\",\"type\":\"human\",\"about\":\"Just a regular person who codes.\",\"status\":\"online\"}",
-      "id": 1753890445323
-    },
-    {
-      "method": "GET",
-      "url": "/mmm",
-      "response": "{\"id\":1,\"username\":\"ibr0r\",\"type\":\"human\",\"about\":\"Just a regular person who codes.\",\"status\":\"online\"}",
-      "id": 1753890455369
-    },
-    {
-      "method": "PATCH",
-      "url": "/id",
-      "response": "{\"id\":1,\"username\":\"ibr0r\",\"type\":\"human\",\"about\":\"Just a regular person who codes.\",\"status\":\"online\"}",
-      "id": 1753890490228
-    },
-    {
-      "method": "DELETE",
-      "url": "/id",
-      "response": "{\n  \"error\": \"Not found\",\n  \"code\": 404\n}",
-      "id": 1753890512257
-    }
+  "users": [
+    { "id": 1, "name": "Alice", "email": "alice@example.com" },
+    { "id": 2, "name": "Bob", "email": "bob@example.com" }
+  ],
+  "posts": [
+    { "id": 1, "title": "Hello World", "body": "This is my first post!", "userId": 1 },
+    { "id": 2, "title": "Apeeye Rocks", "body": "Mock APIs made easy.", "userId": 2 }
+  ],
+  "comments": [
+    { "id": 1, "postId": 1, "author": "Charlie", "text": "Nice post!" },
+    { "id": 2, "postId": 1, "author": "Dave", "text": "Thanks for sharing." }
+  ],
+  "products": [
+    { "id": 1, "name": "Laptop", "price": 1299.99, "inStock": true },
+    { "id": 2, "name": "Mouse", "price": 25.00, "inStock": false }
+  ],
+  "orders": [
+    { "id": 1, "userId": 1, "productIds": [1, 2], "total": 1324.99 },
+    { "id": 2, "userId": 2, "productIds": [2], "total": 25.00 }
   ]
 }

@@ -7,7 +7,7 @@ export default function Docs() {
 
   return (
     <ScrollView style={{ backgroundColor: colors.background }} contentContainerStyle={styles.container}>
-      <Text style={[styles.emoji, { color: colors.text }]}>📚</Text>
+      <Text style={[styles.emoji, { color: colors.text }]}>🐒</Text>
       <Text style={[styles.title, { color: colors.text }]}>Apeeye Docs</Text>
 
       <Text style={[styles.sectionTitle, { color: colors.text }]}>What is Apeeye?</Text>
