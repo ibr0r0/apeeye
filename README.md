@@ -77,7 +77,7 @@ http://localhost:34567/mock/orders
 - [x]  Local mock API server with `db.json`
 - [x]  React Native Web UI for managing collections
 - [ ]  Host Apeeye as a public web app (no local setup required)
-- [ ]  Add visual UI for creating APIs (form-based instead of raw JSON)
+- [x]  Add visual UI for creating APIs (form-based instead of raw JSON)
 - [ ]  Shareable mock endpoints with unique URLs
 - [ ]  Import/export collections as JSON
 - [ ]  Add delay and error simulation (e.g. 404, 500, timeout)
