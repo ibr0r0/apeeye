@@ -11,8 +11,7 @@ Create fake REST endpoints in seconds. No setup. No login. Just build.
 
 ## 📽 Demo
 
-<video src="[assets/Apeeye’s-video.mp4](https://github.com/user-attachments/assets/049737bb-333d-42d5-8c18-15667a7fe080
-)" width="600" autoplay loop muted playsinline></video>
+<video src="https://github.com/user-attachments/assets/049737bb-333d-42d5-8c18-15667a7fe080" width="600" autoplay loop muted playsinline></video>
 
 
 
