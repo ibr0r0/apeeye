@@ -7,6 +7,11 @@ Create fake REST endpoints in seconds. No setup. No login. Just build.
 - Test any HTTP method (GET, POST, PATCH, DELETE)
 - Data saved locally in `db.json`
 - Instant feedback, no backend required
+- Built for devs. Use it anywhere. (watch demo below)
+
+## 📽 Demo
+
+<video src="assets/Apeeye’s-video.mp4" width="600" autoplay loop muted playsinline></video>
 
 
 ## ⚙️ Installation

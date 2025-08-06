@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Pressable, FlatList, Alert, Linking } from 'react-native';
 import { useThemeContext } from '../context/ThemeContext';
 import { Picker } from '@react-native-picker/picker';
+import * as ImagePicker from 'expo-image-picker';
+import { Image } from 'react-native';
 
 const API_URL = 'http://localhost:34567';
 
@@ -128,19 +130,28 @@ export default function Playground() {
     }
   };
 
-  const patchRecord = async (id) => {
-    try {
-      await fetch(`${API_URL}/mock/${selected}/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ updated: true }),
-      });
-      fetchRecords(selected);
-    } catch {
-      setError('Failed to patch record');
+
+  const pickImageAsBase64 = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      base64: true,
+      quality: 1,
+    });
+  
+    if (!result.canceled) {
+      const base64String = `data:image/jpeg;base64,${result.assets[0].base64}`;
+      addImageField(base64String);
     }
   };
-
+  
+  const addImageField = (base64) => {
+    setFields(prev => [...prev, {
+      key: 'image', // تقدر تغيّرها إلى avatar أو أي اسم
+      value: base64,
+      type: 'string',
+    }]);
+  };
+  
 
   function EditableRecordItem({ item, selected, colors, onRefresh, onDelete }) {
     const [isEditing, setIsEditing] = useState(false);
@@ -200,8 +211,31 @@ export default function Playground() {
           </>
         ) : (
           <>
-            <Text style={{ color: colors.text }}>{JSON.stringify(item, null, 2)}</Text>
-  
+          <View style={{ gap: 4 }}>
+            {Object.entries(item).map(([key, val]) => {
+              const isImage = typeof val === 'string' && val.startsWith('data:image');
+              return (
+                <View key={key} style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <Text style={{ color: colors.text, fontFamily: 'monospace', fontSize: 13 }}>
+                    {`"${key}": `}
+                  </Text>
+                  {isImage ? (
+                    <>
+                      <Text style={{ color: colors.text, fontSize: 13 }}>"[base64 image]"</Text>
+                      <Image
+                        source={{ uri: val }}
+                        style={{ width: 32, height: 32, borderRadius: 4, marginLeft: 8 }}
+                      />
+                    </>
+                  ) : (
+                    <Text style={{ color: colors.text, fontSize: 13 }}>
+                      {JSON.stringify(val)}
+                    </Text>
+                  )}
+                </View>
+              );
+            })}
+          </View>
             <Pressable onPress={() => Linking.openURL(recordUrl)} style={{ marginTop: 6 }}>
               <Text style={{
                 color: colors.button,
@@ -238,51 +272,56 @@ export default function Playground() {
         horizontal
         style={{ marginVertical: 12 }}
         renderItem={({ item }) => (
-<View style={{
-  flexDirection: 'row',
-  alignItems: 'center',
-  backgroundColor: selected === item ? colors.button : colors.surface,
-  marginRight: 8,
-  borderRadius: 6,
-  borderColor: colors.border,
-  borderWidth: 1,
-}}>
-  <Pressable
-    onPress={() => fetchRecords(item)}
-    style={{ padding: 10 }}
-  >
-    <Text style={{
-      color: selected === item ? colors.buttonText : colors.text,
-      fontWeight: 'bold'
-    }}>
-      {item}
-    </Text>
-  </Pressable>
-
-  <Pressable
-  onPress={async () => {
-    const shouldDelete = confirm(`Delete '${item}' collection?`);
-    if (!shouldDelete) return;
-
-    console.log('Deleting collection:', item);
-    try {
-      await fetch(`${API_URL}/api/endpoints/${item}`, { method: 'DELETE' });
-      if (selected === item) {
-        setSelected(null);
-        setRecords([]);
-      }
-      fetchResources();
-    } catch (e) {
-      console.error(e);
-      setError('Failed to delete collection');
-    }
-  }}
-  style={{ padding: 6, paddingRight: 10 }}
+        <View style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          backgroundColor: selected === item ? colors.button : colors.surface,
+          marginRight: 8,
+          borderRadius: 6,
+          borderColor: colors.border,
+          borderWidth: 1,
+        }}>
+      <Pressable
+        onPress={() => fetchRecords(item)}
+        style={{ padding: 10 }}
+      >
+        <Text style={{
+          color: selected === item ? colors.buttonText : colors.text,
+          fontWeight: 'bold'
+        }}>
+          {item}
+        </Text>
+      </Pressable>
+      <Pressable
+  onPress={() => Linking.openURL(`${API_URL}/mock/${item}`)}
+  style={{ padding: 6 }}
 >
-  <Text style={{ color: '#E85B5B', fontSize: 14 }}>✕</Text>
+  <Text style={{ fontSize: 14, color: colors.text }}>🔗</Text>
 </Pressable>
+        <Pressable
+        onPress={async () => {
+          const shouldDelete = confirm(`Delete '${item}' collection?`);
+          if (!shouldDelete) return;
 
-</View>
+          console.log('Deleting collection:', item);
+          try {
+            await fetch(`${API_URL}/api/endpoints/${item}`, { method: 'DELETE' });
+            if (selected === item) {
+              setSelected(null);
+              setRecords([]);
+            }
+            fetchResources();
+          } catch (e) {
+            console.error(e);
+            setError('Failed to delete collection');
+          }
+        }}
+        style={{ padding: 6, paddingRight: 10 }}
+      >
+        <Text style={{ color: '#E85B5B', fontSize: 14 }}>✕</Text>
+      </Pressable>
+
+      </View>
 
         )}
       />
@@ -418,7 +457,35 @@ export default function Playground() {
           >
             <Text style={{ color: colors.text, fontWeight: 'bold' }}>+ Add Field</Text>
           </Pressable>
+         <Pressable
+              onPress={pickImageAsBase64}
+              style={{
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+                borderWidth: 1,
+                padding: 10,
+                borderRadius: 6,
+                marginTop: 10,
+                alignItems: 'center',
+              }}
+            >
+              <Text style={{ color: colors.text, fontWeight: 'bold' }}>🖼️ Add Image (base64)</Text>
+           </Pressable>
 
+       {fields.map((field, index) => {
+          const isImageField = field.key.toLowerCase().includes('image') && field.value.startsWith('data:image');
+          return (
+            <View key={index} style={{ flexDirection: 'row', marginTop: 10, alignItems: 'center' }}>
+              ...
+              {isImageField && (
+                <Image
+                  source={{ uri: field.value }}
+                  style={{ width: 50, height: 50, borderRadius: 6, marginLeft: 8 }}
+                />
+              )}
+            </View>
+          );
+        })}
 
           <Pressable
             onPress={addRecord}
