@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: apeeye
+    runtime: node
+    plan: free
+    buildCommand: npm install && npx expo export --platform web && cd server && npm install
+    startCommand: node server/index.js
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production

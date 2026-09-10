@@ -1,104 +1,107 @@
 import React from 'react';
-import { Text, View, StyleSheet, ScrollView } from 'react-native';
-import { useThemeContext } from '../context/ThemeContext';
+import { Animated, Text, View } from 'react-native';
+import { useThemeContext, FONT, MONO } from '../context/ThemeContext';
+import { useWorkspace } from '../src/WorkspaceContext';
+import { Badge, Body, Button, Card, CodeBlock, Group, Row, Title, methodTone, useFadeIn } from '../components/ui';
 
-export default function Docs() {
-  const { colors } = useThemeContext();
-
+function Section({ title, children }) {
   return (
-    <ScrollView style={{ backgroundColor: colors.background }} contentContainerStyle={styles.container}>
-      <Text style={[styles.emoji, { color: colors.text }]}>🐒</Text>
-      <Text style={[styles.title, { color: colors.text }]}>Apeeye Docs</Text>
-
-      <Text style={[styles.sectionTitle, { color: colors.text }]}>What is Apeeye?</Text>
-      <Text style={[styles.text, { color: colors.text }]}>
-        Apeeye is a zero-bullshit API mocking tool for frontend devs. No signup, no config. Create fake APIs in seconds.
-      </Text>
-
-      <Text style={[styles.sectionTitle, { color: colors.text }]}>Features</Text>
-      <Text style={[styles.text, { color: colors.text }]}>
-        • Make fake endpoints like /users or /stats{"\n"}
-        • Instantly test any HTTP method{"\n"}
-        • Full local persistence – your data stays{"\n"}
-        • Error simulation (404, 500, etc){"\n"}
-        • Works in dark & light mode
-      </Text>
-
-      <Text style={[styles.sectionTitle, { color: colors.text }]}>Getting Started</Text>
-<Text style={[styles.text, { color: colors.text }]}>
-  1. Start the Expo web app:
-  {"\n"}   <Text style={{ fontFamily: 'monospace' }}>npx expo start --web</Text>
-  {"\n\n"}2. In a new terminal, start the server:
-  {"\n"}   <Text style={{ fontFamily: 'monospace' }}>node server/index.js</Text>
-  {"\n\n"}3. Open the Playground tab.
-  {"\n"}4. Add your first endpoint (like <Text style={{ fontFamily: 'monospace' }}>/users</Text>).
-  {"\n"}5. Use the mock API in your frontend.
-</Text>
-
-      <Text style={[styles.sectionTitle, { color: colors.text }]}>Examples</Text>
-      <Text style={[styles.codeBlock, { color: colors.text }]}>
-        GET /users{"\n"}
-        → Returns user list.{"\n\n"}
-        POST /order{"\n"}
-        → Fakes order creation.{"\n\n"}
-        GET /fail?type=500{"\n"}
-        → Simulates a server error.
-      </Text>
-
-      <Text style={[styles.sectionTitle, { color: colors.text }]}>FAQ</Text>
-      <Text style={[styles.text, { color: colors.text }]}>
-        Q: Login?{"\n"}
-        A: Never.{"\n\n"}
-        Q: Where is my data?{"\n"}
-        A: Stays local, no sync.{"\n\n"}
-        Q: Shareable mocks?{"\n"}
-        A: Soon.
-      </Text>
-
-      <Text style={[styles.sectionTitle, { color: colors.text }]}>Coming Soon</Text>
-      <Text style={[styles.text, { color: colors.text }]}>
-        - Shareable endpoints{"\n"}
-        - Custom delays{"\n"}
-        - Export to Postman/cURL{"\n"}
-        - Webhook events
-      </Text>
-    </ScrollView>
+    <View style={{ gap: 12 }}>
+      <Title size={22}>{title}</Title>
+      {children}
+    </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    padding: 24,
-    paddingBottom: 60,
-  },
-  emoji: {
-    fontSize: 42,
-    textAlign: 'center',
-    marginBottom: 12,
-  },
-  title: {
-    fontSize: 26,
-    fontWeight: '700',
-    textAlign: 'center',
-    marginBottom: 28,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginTop: 20,
-    marginBottom: 8,
-  },
-  text: {
-    fontSize: 15,
-    lineHeight: 23,
-    opacity: 0.88,
-  },
-  codeBlock: {
-    fontFamily: 'monospace',
-    fontSize: 14,
-    backgroundColor: '#00000020',
-    padding: 10,
-    borderRadius: 8,
-    marginTop: 6,
-  },
-});
+export default function Docs({ navigate }) {
+  const { colors } = useThemeContext();
+  const { workspaceUrl: u, limits } = useWorkspace();
+  const anim = useFadeIn();
+
+  const endpoints = [
+    ['GET', '/:collection', 'List all records'],
+    ['POST', '/:collection', 'Create one. Send a JSON object; an id is assigned.'],
+    ['GET', '/:collection/:id', 'Read one record'],
+    ['PUT', '/:collection/:id', 'Replace a record. The id is kept.'],
+    ['PATCH', '/:collection/:id', 'Merge fields into a record'],
+    ['DELETE', '/:collection/:id', 'Delete a record'],
+    ['GET', '/', 'List your collection names'],
+  ];
+
+  return (
+    <Animated.View style={[anim, { gap: 36, maxWidth: 780, alignSelf: 'center', width: '100%' }]}>
+      <View style={{ gap: 8, paddingTop: 12 }}>
+        <Title size={40}>Docs</Title>
+        <Body secondary style={{ fontSize: 17 }}>Everything you need. It fits on one page on purpose.</Body>
+      </View>
+
+      <Section title="How it works">
+        <Card style={{ gap: 10 }}>
+          <Body>On first visit your browser creates a random workspace ID and keeps it in localStorage. Your collections and records live in IndexedDB. The page holds a WebSocket to a small relay. When anything calls your URL, the relay forwards the request to this tab, the tab answers from IndexedDB, and the relay returns the response. The relay stores nothing.</Body>
+          <Body secondary>The one trade-off: endpoints answer only while a tab with your workspace is open. Close it and callers get a 503 with a hint. Reopen it and everything is back.</Body>
+        </Card>
+      </Section>
+
+      <Section title="Your endpoints">
+        <CodeBlock>{u}</CodeBlock>
+        <Group>
+          {endpoints.map(([m, p, d]) => (
+            <Row key={m + p} style={{ gap: 14 }}>
+              <Badge tone={methodTone(m)} style={{ minWidth: 62 }}>{m}</Badge>
+              <Text style={{ color: colors.text, fontSize: 14, fontFamily: MONO, minWidth: 150 }}>{p}</Text>
+              <Text style={{ color: colors.secondary, fontSize: 14, fontFamily: FONT, flex: 1 }}>{d}</Text>
+            </Row>
+          ))}
+        </Group>
+        <Body secondary style={{ fontSize: 13.5 }}>
+          404 when a collection or record doesn’t exist. 422 for an invalid name, id or body. 413 for oversized records. 429 at limits. 405 for unsupported methods.
+        </Body>
+      </Section>
+
+      <Section title="Examples">
+        <CodeBlock>{`// in your app
+const res = await fetch("${u}/users");
+const users = await res.json();
+
+await fetch("${u}/users", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ name: "Ada", admin: true }),
+});`}</CodeBlock>
+        <CodeBlock>{`# from a terminal
+curl ${u}/users
+curl -X PATCH ${u}/users/1 \\
+  -H 'Content-Type: application/json' -d '{"admin":false}'`}</CodeBlock>
+      </Section>
+
+      <Section title="Workspace">
+        <Group>
+          <Row label="Copy URL" value="Paste it into code or share it with a teammate." />
+          <Row label="Export / Import" value="Download or load the whole workspace as JSON. This is your backup." />
+          <Row label="Reset" value="Wipes everything and gives you a fresh ID and URL." />
+          <Row label="Multiple tabs" value="The newest tab wins. The older one can take back over in one click." />
+        </Group>
+      </Section>
+
+      <Section title="Limits">
+        <Group>
+          <Row label="Collections" value={`${limits.maxCollections}`} />
+          <Row label="Records per collection" value={`${limits.maxRecordsPerCollection}`} />
+          <Row label="Record size" value={`${Math.round(limits.maxRecordBytes / 1024 / 1024)} MB, images included`} />
+        </Group>
+        <Body secondary style={{ fontSize: 13.5 }}>The relay also rate-limits callers per IP and per workspace, and caps request bodies and concurrent requests.</Body>
+      </Section>
+
+      <Section title="Security and privacy">
+        <Card style={{ gap: 8 }}>
+          <Body>Your workspace ID is generated with a cryptographic random source and is the only thing protecting your URL. Treat it like a secret link: anyone who has it can read and write your mocks. Reset rotates it.</Body>
+          <Body secondary>Nothing is ever written on the server. Prototype-polluting keys are stripped from every payload. This is a mocking tool, not a place for real user data.</Body>
+        </Card>
+      </Section>
+
+      <View style={{ alignItems: 'center', paddingTop: 8 }}>
+        <Button title="Open Playground" iconRight="arrowRight" size="lg" onPress={() => navigate?.('Playground')} />
+      </View>
+    </Animated.View>
+  );
+}

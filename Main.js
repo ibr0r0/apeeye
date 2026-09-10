@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, useWindowDimensions } from 'react-native';
+import { ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { useThemeContext } from './context/ThemeContext';
 import Navbar from './components/Navbar';
 import Home from './screens/Home';
@@ -10,37 +10,31 @@ export default function Main() {
   const [page, setPage] = useState('Home');
   const { colors } = useThemeContext();
   const { width } = useWindowDimensions();
-  const isSmall = width < 500;
+  const pad = width < 600 ? 16 : 24;
 
   const renderPage = () => {
     switch (page) {
-      case 'Home': return <Home navigate={setPage} />;
-      case 'Playground': return <Playground />;
-      case 'Docs': return <Docs />;
-      default: return <Home navigate={setPage} />;
+      case 'Playground': return <Playground key="pg" />;
+      case 'Docs': return <Docs key="docs" navigate={setPage} />;
+      default: return <Home key="home" navigate={setPage} />;
     }
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <Navbar currentPage={page} navigate={setPage} />
-      <ScrollView contentContainerStyle={[styles.content, isSmall && styles.contentSmall]}>
-        {renderPage()}
+    <View style={[styles.root, { backgroundColor: colors.background }]}>
+      <ScrollView stickyHeaderIndices={[0]} contentContainerStyle={styles.content}>
+        <Navbar currentPage={page} navigate={setPage} />
+        <View style={[styles.page, { paddingHorizontal: pad }]}>
+          <View style={styles.container}>{renderPage()}</View>
+        </View>
       </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  content: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 40,
-    gap: 20,
-  },
-  contentSmall: {
-    padding: 20,
-    gap: 14,
-  },
+  root: { flex: 1 },
+  content: { paddingBottom: 80 },
+  page: { paddingTop: 28 },
+  container: { width: '100%', maxWidth: 1120, alignSelf: 'center' },
 });
