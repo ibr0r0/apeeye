@@ -39,3 +39,8 @@ yarn-error.*
 # env files
 .env
 server/.env
+
+# wrangler
+.wrangler/
+.dev.vars
+wrangler.toml

@@ -1,3 +1,5 @@
+const { encodeFrames, Reassembler } = require('../shared/wire');
+
 const STATUS = {
   CONNECTING: 'connecting',
   ONLINE: 'online',
@@ -17,11 +19,11 @@ function getRelayHttpBase() {
   if (loc && loc.origin && !/localhost:(8081|19006|3000)$/.test(loc.host)) {
     return loc.origin;
   }
-  return 'http://localhost:34567';
+  return 'http://localhost:8787';
 }
 
-function toWsUrl(httpBase) {
-  return httpBase.replace(/^http/, 'ws') + '/ws';
+function toWsUrl(httpBase, workspaceId) {
+  return httpBase.replace(/^http/, 'ws') + '/ws/' + encodeURIComponent(workspaceId);
 }
 
 function createRelayClient({ workspaceId, engine, onStatus, onRequest }) {
@@ -32,6 +34,7 @@ function createRelayClient({ workspaceId, engine, onStatus, onRequest }) {
   let reconnectTimer = null;
   let closedByUser = false;
   let currentWorkspace = workspaceId;
+  let reassembler = new Reassembler();
   const listeners = new Set();
   if (onStatus) listeners.add(onStatus);
 
@@ -44,7 +47,8 @@ function createRelayClient({ workspaceId, engine, onStatus, onRequest }) {
   }
 
   function send(msg) {
-    if (ws && ws.readyState === 1 /* OPEN */) ws.send(JSON.stringify(msg));
+    if (!ws || ws.readyState !== 1) return;
+    for (const f of encodeFrames(msg)) ws.send(f);
   }
 
   function startHeartbeat() {
@@ -62,22 +66,18 @@ function createRelayClient({ workspaceId, engine, onStatus, onRequest }) {
     try {
       response = await engine.handle({ method, path, query, headers, body });
       if (onRequest) {
-        try { onRequest({ method, path, status: response.status }); } catch { /* ignore */ }
+        try { onRequest({ method, path, status: response.status }); } catch {}
       }
-    } catch (err) {
-      response = {
-        status: 500,
-        headers: { 'content-type': 'application/json' },
-        body: { error: 'Workspace failed to handle request' },
-      };
+    } catch {
+      response = { status: 500, headers: { 'content-type': 'application/json' }, body: { error: 'Workspace failed to handle request' } };
     }
     send({ type: 'response', reqId, status: response.status, headers: response.headers, body: response.body });
   }
 
   function onMessage(event) {
     let msg;
-    try { msg = JSON.parse(event.data); } catch { return; }
-    if (!msg || typeof msg !== 'object') return;
+    try { msg = reassembler.push(event.data); } catch { return; }
+    if (!msg) return;
     switch (msg.type) {
       case 'registered':
         attempts = 0;
@@ -89,7 +89,7 @@ function createRelayClient({ workspaceId, engine, onStatus, onRequest }) {
       case 'replaced':
         closedByUser = true; // don't fight the other tab
         setStatus(STATUS.REPLACED);
-        try { ws.close(); } catch { /* ignore */ }
+        try { ws.close(); } catch {}
         break;
       case 'pong':
         break;
@@ -115,8 +115,9 @@ function createRelayClient({ workspaceId, engine, onStatus, onRequest }) {
     if (typeof WebSocket === 'undefined') { setStatus(STATUS.OFFLINE); return; }
 
     setStatus(attempts === 0 ? STATUS.CONNECTING : STATUS.RECONNECTING);
+    reassembler = new Reassembler();
     try {
-      ws = new WebSocket(toWsUrl(getRelayHttpBase()));
+      ws = new WebSocket(toWsUrl(getRelayHttpBase(), currentWorkspace));
     } catch {
       scheduleReconnect();
       return;
@@ -138,7 +139,7 @@ function createRelayClient({ workspaceId, engine, onStatus, onRequest }) {
     closedByUser = true;
     stopHeartbeat();
     if (reconnectTimer) clearTimeout(reconnectTimer);
-    if (ws) { try { ws.close(); } catch { /* ignore */ } }
+    if (ws) { try { ws.close(); } catch {} }
     ws = null;
     setStatus(STATUS.OFFLINE);
   }
@@ -147,7 +148,7 @@ function createRelayClient({ workspaceId, engine, onStatus, onRequest }) {
     currentWorkspace = newId;
     closedByUser = false;
     attempts = 0;
-    if (ws) { try { ws.close(); } catch { /* ignore */ } ws = null; }
+    if (ws) { try { ws.close(); } catch {} ws = null; }
     connect();
   }
 

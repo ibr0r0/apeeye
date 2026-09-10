@@ -5,7 +5,29 @@ All notable changes to Apeeye are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project uses [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [2.0.1]
+
+### Changed
+- The relay now runs on **Cloudflare Workers + Durable Objects** instead of an
+  Express process. One Durable Object per workspace owns that workspace's
+  WebSocket; the Worker routes `/mock/<workspace>/*`, serves the built
+  frontend, and applies CORS, security headers and rate limits. Deploy with
+  `npm run deploy`; the custom domain is set in `wrangler.toml`.
+- Tabs connect to `/ws/<workspace>` (the workspace is in the URL) instead of
+  registering after connecting. The `register` message is still accepted.
+- Large messages are chunked over the WebSocket and reassembled on both ends,
+  so records up to the 5 MB cap still work within the platform's 1 MiB
+  per-message limit.
+- Local development uses `wrangler dev` on port 8787 (`npm run relay`).
+
+### Removed
+- The Express/`ws` server, `render.yaml` and `server/.env.example`.
+
+### Security
+- Same guarantees as 2.0.0 (forced JSON responses, header stripping,
+  redirect neutralisation, per-workspace reply isolation, rate limits, body and
+  in-flight caps, CSP) re-implemented for Workers, each covered by the
+  integration tests.
 
 ## [2.0.0] - 2026-09-10
 

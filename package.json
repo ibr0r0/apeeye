@@ -10,25 +10,28 @@
     "web": "expo start --web",
     "test": "node --test \"shared/*.test.js\" \"src/*.test.js\" \"server/*.test.js\"",
     "build:web": "expo export --platform web",
-    "server": "node server/index.js"
+    "relay": "wrangler dev",
+    "deploy": "expo export --platform web && wrangler deploy"
   },
   "dependencies": {
     "@expo/metro-runtime": "~5.0.4",
     "@react-native-picker/picker": "^2.11.1",
     "axios": "^1.11.0",
-    "cors": "^2.8.5",
     "expo": "~53.0.20",
     "expo-blur": "~14.1.5",
+    "expo-image-picker": "~16.1.4",
     "expo-status-bar": "~2.2.3",
-    "express": "^5.1.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-native": "0.79.5",
-    "react-native-web": "^0.20.0",
-    "expo-image-picker": "~16.1.4"
+    "react-native-web": "^0.20.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.20.0"
+    "@babel/core": "^7.20.0",
+    "wrangler": "^4.131.0",
+    "ws": "^8.21.3",
+    "typescript": "~5.8.3",
+    "@types/react": "~19.0.10"
   },
   "private": true
 }
