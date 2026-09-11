@@ -94,12 +94,51 @@ async function handleMock(request, env, id, rest, url) {
   return finalize(res, host, { cors: true });
 }
 
+const SITE = {
+  title: 'Apeeye — Fake APIs. Real endpoints.',
+  description: 'Create mock REST endpoints in seconds. No login, no config, no database. Your data never leaves your browser.',
+  image: '/og.jpg',
+  imageWidth: '2400',
+  imageHeight: '1231',
+};
+
+function metaTags(origin) {
+  const t = SITE.title;
+  const d = SITE.description;
+  const img = origin + SITE.image;
+  return [
+    ['name', 'description', d],
+    ['property', 'og:type', 'website'],
+    ['property', 'og:site_name', 'Apeeye'],
+    ['property', 'og:title', t],
+    ['property', 'og:description', d],
+    ['property', 'og:url', origin + '/'],
+    ['property', 'og:image', img],
+    ['property', 'og:image:width', SITE.imageWidth],
+    ['property', 'og:image:height', SITE.imageHeight],
+    ['property', 'og:image:alt', 'Apeeye: fake APIs, real endpoints'],
+    ['name', 'twitter:card', 'summary_large_image'],
+    ['name', 'twitter:title', t],
+    ['name', 'twitter:description', d],
+    ['name', 'twitter:image', img],
+    ['name', 'twitter:site', '@ibr0r'],
+  ].map(([attr, key, val]) => `<meta ${attr}="${key}" content="${val.replace(/"/g, '&quot;')}">`).join('\n');
+}
+
 async function handleAssets(request, env, url) {
   const res = await env.ASSETS.fetch(request);
   const out = finalize(res, url.host);
   const ct = out.headers.get('content-type') || '';
-  if (ct.includes('text/html')) out.headers.set('cache-control', 'no-cache, no-store, must-revalidate');
-  else if (url.pathname.startsWith('/_expo/static/')) out.headers.set('cache-control', 'public, max-age=31536000, immutable');
+  if (ct.includes('text/html')) {
+    out.headers.set('cache-control', 'no-cache, no-store, must-revalidate');
+    const tags = metaTags(url.origin);
+    return new HTMLRewriter()
+      .on('title', { element(el) { el.setInnerContent(SITE.title); } })
+      .on('head', { element(el) { el.append(tags, { html: true }); } })
+      .transform(out);
+  }
+  if (url.pathname.startsWith('/_expo/static/')) out.headers.set('cache-control', 'public, max-age=31536000, immutable');
+  else if (url.pathname === SITE.image) out.headers.set('cache-control', 'public, max-age=86400');
   return out;
 }
 

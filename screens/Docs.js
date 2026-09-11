@@ -3,6 +3,17 @@ import { Animated, Text, View } from 'react-native';
 import { useThemeContext, FONT, MONO } from '../context/ThemeContext';
 import { useWorkspace } from '../src/WorkspaceContext';
 import { Badge, Body, Button, Card, CodeBlock, Group, Row, Title, methodTone, useFadeIn } from '../components/ui';
+import Footer from '../components/Footer';
+
+function DocRow({ label, body }) {
+  const { colors } = useThemeContext();
+  return (
+    <View style={{ paddingVertical: 12, paddingHorizontal: 16, gap: 3 }}>
+      <Text style={{ color: colors.text, fontSize: 15, fontWeight: '600', fontFamily: FONT }}>{label}</Text>
+      <Text style={{ color: colors.secondary, fontSize: 14, lineHeight: 20, fontFamily: FONT }}>{body}</Text>
+    </View>
+  );
+}
 
 function Section({ title, children }) {
   return (
@@ -76,18 +87,18 @@ curl -X PATCH ${u}/users/1 \\
 
       <Section title="Workspace">
         <Group>
-          <Row label="Copy URL" value="Paste it into code or share it with a teammate." />
-          <Row label="Export / Import" value="Download or load the whole workspace as JSON. This is your backup." />
-          <Row label="Reset" value="Wipes everything and gives you a fresh ID and URL." />
-          <Row label="Multiple tabs" value="The newest tab wins. The older one can take back over in one click." />
+          <DocRow label="Copy URL" body="Paste it into code or share it with a teammate." />
+          <DocRow label="Export / Import" body="Download or load the whole workspace as JSON. This is your backup." />
+          <DocRow label="Reset" body="Wipes everything and gives you a fresh ID and URL." />
+          <DocRow label="Multiple tabs" body="The newest tab wins. The older one can take back over in one click." />
         </Group>
       </Section>
 
       <Section title="Limits">
         <Group>
-          <Row label="Collections" value={`${limits.maxCollections}`} />
-          <Row label="Records per collection" value={`${limits.maxRecordsPerCollection}`} />
-          <Row label="Record size" value={`${Math.round(limits.maxRecordBytes / 1024 / 1024)} MB, images included`} />
+          <DocRow label="Collections" body={`Up to ${limits.maxCollections} per workspace.`} />
+          <DocRow label="Records per collection" body={`Up to ${limits.maxRecordsPerCollection}.`} />
+          <DocRow label="Record size" body={`${Math.round(limits.maxRecordBytes / 1024 / 1024)} MB each, images included.`} />
         </Group>
         <Body secondary style={{ fontSize: 13.5 }}>The relay also rate-limits callers per IP and per workspace, and caps request bodies and concurrent requests.</Body>
       </Section>
@@ -102,6 +113,8 @@ curl -X PATCH ${u}/users/1 \\
       <View style={{ alignItems: 'center', paddingTop: 8 }}>
         <Button title="Open Playground" iconRight="arrowRight" size="lg" onPress={() => navigate?.('Playground')} />
       </View>
+
+      <Footer navigate={navigate} />
     </Animated.View>
   );
 }

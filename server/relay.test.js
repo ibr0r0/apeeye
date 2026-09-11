@@ -298,5 +298,10 @@ describe('relay (workers)', () => {
     assert.equal(page.status, 200);
     assert.match(page.headers.get('content-type'), /text\/html/);
     assert.match(page.headers.get('cache-control'), /no-cache/);
+    const html = await page.text();
+    assert.match(html, /<meta property="og:image" content="https?:\/\/[^"]+\/og\.jpg">/);
+    assert.match(html, /<meta name="twitter:card" content="summary_large_image">/);
+    assert.match(html, /<title>Apeeye — Fake APIs\. Real endpoints\.<\/title>/);
+    assert.equal((await fetch(`${base}/og.jpg`)).headers.get('content-type'), 'image/jpeg');
   });
 });

@@ -3,6 +3,7 @@ import { Animated, Easing, Pressable, Text, View, useWindowDimensions } from 're
 import { useThemeContext, FONT } from '../context/ThemeContext';
 import { useWorkspace } from '../src/WorkspaceContext';
 import { Body, Button, Card, CodeBlock, CopyButton, Icon, Title, useFadeIn } from '../components/ui';
+import Footer from '../components/Footer';
 
 const FEATURES = [
   { icon: 'bolt', title: 'Instant endpoints', body: 'Name a collection and it’s a live REST URL with GET, POST, PUT, PATCH and DELETE.' },
@@ -119,6 +120,8 @@ export default function Home({ navigate }) {
       <Body secondary style={{ textAlign: 'center', fontSize: 13.5, maxWidth: 560, alignSelf: 'center' }}>
         One honest trade-off: endpoints answer only while this tab is open. Close it and they pause. Reopen it and they’re back.
       </Body>
+
+      <Footer navigate={navigate} />
     </View>
   );
 }
