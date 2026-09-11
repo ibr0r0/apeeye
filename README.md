@@ -11,7 +11,13 @@ Create fake REST endpoints in seconds. No setup. No login. No database.
 
 ## Demo
 
-<video src="https://github.com/user-attachments/assets/049737bb-333d-42d5-8c18-15667a7fe080" width="600" autoplay loop muted playsinline></video>
+
+
+https://github.com/user-attachments/assets/ae0cd397-2b0e-42dd-8d49-7a1640828459
+
+
+
+
 
 ## How it works
 
