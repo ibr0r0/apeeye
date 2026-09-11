@@ -9,7 +9,7 @@ Create fake REST endpoints in seconds. No setup. No login. No database.
 - Call your endpoints from your app, curl, Postman, or a teammate's machine
 - Export and import your whole workspace as JSON
 
-## 📽 Demo
+## Demo
 
 <video src="https://github.com/user-attachments/assets/049737bb-333d-42d5-8c18-15667a7fe080" width="600" autoplay loop muted playsinline></video>
 
@@ -30,7 +30,7 @@ Nothing is ever written on the server.
 **The one trade-off:** endpoints answer only while a tab with your workspace is
 open. Close it and callers get a clear `503`. Reopen it and everything is back.
 
-## ⚙️ Run it locally
+## Run it locally
 
 ```
 git clone https://github.com/ibr0r0/apeeye.git
@@ -76,25 +76,7 @@ const users = await res.json();
 
 Endpoint reference, examples and limits are in the in-app **Docs** tab.
 
-## 🚀 Deployment
-
-Apeeye runs on **Cloudflare Workers**. A Worker serves the built frontend and
-routes `/mock/<workspace>/*`; one **Durable Object** per workspace holds that
-workspace's WebSocket and forwards requests to it. Nothing is stored anywhere.
-
-```
-npx wrangler login
-npm run deploy
-```
-
-`wrangler.toml` binds the custom domain `apeeye.ibr0r.com`; Cloudflare creates
-the DNS record and certificate on first deploy. Health check at `/health`.
-
-Per-IP rate limiting is enforced by a small Durable Object keyed by client IP,
-with the Workers rate-limiting binding as a fast first pass. Timeouts, body caps
-and per-workspace quotas live in `server/relay-core.js`.
-
-## 🔒 Security
+## Security
 
 There are no accounts. The workspace ID (10 chars, base62, CSPRNG) is a
 capability: anyone with the URL can read and write that workspace. Reset rotates it.
@@ -111,7 +93,7 @@ The relay is hardened for public exposure:
 
 This is a mocking tool. Do not put real user data in it.
 
-## 🧪 Tests
+## Tests
 
 ```
 npm test

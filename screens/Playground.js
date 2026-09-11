@@ -12,9 +12,23 @@ import RecordForm from '../components/RecordForm';
 function Collections({ selected, onSelect }) {
   const { colors } = useThemeContext();
   const toast = useToast();
-  const { collections, createCollection, deleteCollection, limits } = useWorkspace();
+  const { collections, createCollection, deleteCollection, loadExamples, limits } = useWorkspace();
   const [name, setName] = useState('');
   const [adding, setAdding] = useState(false);
+  const [loadingExamples, setLoadingExamples] = useState(false);
+
+  const examples = async () => {
+    setLoadingExamples(true);
+    try {
+      const r = await loadExamples();
+      onSelect('users');
+      toast.success(`Loaded ${r.collections} collections with ${r.records} records`);
+    } catch (e) {
+      toast.error(e.message || 'Couldn’t load examples');
+    } finally {
+      setLoadingExamples(false);
+    }
+  };
 
   const normalized = name.trim().toLowerCase();
   const invalid = normalized.length > 0 && !RESOURCE_NAME_RE.test(normalized);
@@ -36,9 +50,12 @@ function Collections({ selected, onSelect }) {
 
   return (
     <View style={{ gap: 10 }}>
-      <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', paddingHorizontal: 4 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 4 }}>
         <Caption upper>Collections</Caption>
-        <Caption>{collections.length} of {limits.maxCollections}</Caption>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+          {collections.length > 0 ? <Button title="Examples" icon="sparkle" size="sm" variant="plain" onPress={examples} loading={loadingExamples} /> : null}
+          <Caption>{collections.length} of {limits.maxCollections}</Caption>
+        </View>
       </View>
 
       <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
@@ -49,7 +66,12 @@ function Collections({ selected, onSelect }) {
 
       {collections.length === 0 ? (
         <Card padded={false} style={{ paddingVertical: 8 }}>
-          <EmptyState icon="folder" title="No collections yet" body="Add one above. It becomes a live endpoint the moment it exists." />
+          <EmptyState
+            icon="folder"
+            title="No collections yet"
+            body="Add one above, or load a ready-made set of users, products, posts and orders."
+            action={<Button title="Load examples" icon="sparkle" variant="tinted" onPress={examples} loading={loadingExamples} />}
+          />
         </Card>
       ) : (
         <Group>

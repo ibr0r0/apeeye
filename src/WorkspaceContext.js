@@ -4,6 +4,7 @@ import { createIndexedDBStorage } from './storage/idb';
 import { getOrCreateWorkspaceId, rotateWorkspaceId } from './workspace';
 import { createRelayClient, STATUS } from './relayClient';
 import { buildExport, parseImport, downloadJson, pickJsonFile } from './importExport';
+import { buildExamples } from './examples';
 
 const WorkspaceContext = createContext(null);
 const MAX_ACTIVITY = 50;
@@ -106,6 +107,21 @@ export function WorkspaceProvider({ children }) {
     downloadJson(buildExport(snapshot), `apeeye-${workspaceId}.json`);
   }, [storage, workspaceId]);
 
+  const loadExamples = useCallback(async () => {
+    const examples = buildExamples();
+    let added = 0;
+    for (const [name, records] of Object.entries(examples)) {
+      const c = await engine.createCollection(name);
+      if (c.status >= 400) throw new Error(c.body.error);
+      for (const r of records) {
+        const res = await engine.handle({ method: 'POST', path: `/${name}`, body: r });
+        if (res.status < 400) added += 1;
+      }
+    }
+    await refreshCollections();
+    return { collections: Object.keys(examples).length, records: added };
+  }, [engine, refreshCollections]);
+
   const importWorkspace = useCallback(async () => {
     const text = await pickJsonFile();
     if (text == null) return null; // cancelled
@@ -137,12 +153,13 @@ export function WorkspaceProvider({ children }) {
     reconnect,
     exportWorkspace,
     importWorkspace,
+    loadExamples,
     limits: engine.limits,
   }), [
     ready, storageError, workspaceId, workspaceUrl, httpBase, endpointUrl, relayStatus, activity,
     collections, refreshCollections, createCollection, deleteCollection, listRecords, createRecord,
     replaceRecord, patchRecord, deleteRecord, resetWorkspace, reconnect, exportWorkspace, importWorkspace,
-    engine.limits,
+    loadExamples, engine.limits,
   ]);
 
   return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>;
