@@ -16,27 +16,44 @@ const STRIPPED_RESPONSE_HEADERS = new Set([
   'strict-transport-security', 'content-security-policy',
   'content-type', 'content-disposition', 'location', 'refresh',
   'x-frame-options', 'x-content-type-options', 'link',
+  'cache-control', 'expires', 'pragma', 'vary', 'age',
+  'access-control-allow-origin', 'access-control-allow-credentials',
 ]);
 
-const CSP = [
-  "default-src 'self'",
-  "connect-src 'self' ws: wss:",
-  "img-src 'self' data: blob:",
-  "style-src 'self' 'unsafe-inline'",
-  "script-src 'self'",
-  "font-src 'self' https: data:",
-  "object-src 'none'",
-  "frame-ancestors 'none'",
-  "base-uri 'self'",
-  "form-action 'self'",
-].join('; ');
+function csp(host) {
+  const ws = host ? `wss://${host} ws://${host}` : 'wss: ws:';
+  return [
+    "default-src 'self'",
+    `connect-src 'self' ${ws}`,
+    "img-src 'self' data: blob:",
+    "style-src 'self' 'unsafe-inline'",
+    "script-src 'self'",
+    "font-src 'self' https: data:",
+    "object-src 'none'",
+    "frame-ancestors 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+  ].join('; ');
+}
 
-function securityHeaders(h) {
-  h.set('content-security-policy', CSP);
+const CSP = csp();
+
+function securityHeaders(h, host) {
+  h.set('content-security-policy', csp(host));
   h.set('x-content-type-options', 'nosniff');
   h.set('x-frame-options', 'DENY');
   h.set('referrer-policy', 'strict-origin-when-cross-origin');
+  h.set('strict-transport-security', 'max-age=31536000; includeSubDomains');
+  h.set('permissions-policy', 'camera=(), microphone=(), geolocation=()');
   return h;
+}
+
+function originAllowed(origin, host) {
+  if (!origin) return true;
+  let u;
+  try { u = new URL(origin); } catch { return false; }
+  if (u.host === host) return true;
+  return u.hostname === 'localhost' || u.hostname === '127.0.0.1';
 }
 
 function corsHeaders(h) {
@@ -70,4 +87,4 @@ function buildResponse(msg) {
   return new Response(noBody ? null : JSON.stringify(msg.body), { status, headers: h });
 }
 
-module.exports = { WORKSPACE_ID_RE, LIMITS, STRIPPED_RESPONSE_HEADERS, CSP, securityHeaders, corsHeaders, json, buildResponse };
+module.exports = { WORKSPACE_ID_RE, LIMITS, STRIPPED_RESPONSE_HEADERS, CSP, csp, securityHeaders, corsHeaders, originAllowed, json, buildResponse };

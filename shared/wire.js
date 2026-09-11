@@ -36,7 +36,7 @@ class Reassembler {
     }
     let p = this.parts.get(id);
     if (!p) {
-      if (this.parts.size >= 8) this.parts.clear();
+      if (this.parts.size >= 4) this.parts.clear();
       p = { n, got: 0, size: 0, chunks: new Array(n) };
       this.parts.set(id, p);
     }
@@ -45,8 +45,10 @@ class Reassembler {
       p.got += 1;
       p.size += data.length;
     }
-    if (p.size > this.max) {
-      this.parts.delete(id);
+    let total = 0;
+    for (const q of this.parts.values()) total += q.size;
+    if (p.size > this.max || total > this.max) {
+      this.parts.clear();
       throw new Error('message too large');
     }
     if (p.got < p.n) return null;

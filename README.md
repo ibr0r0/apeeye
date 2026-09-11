@@ -30,39 +30,35 @@ Nothing is ever written on the server.
 **The one trade-off:** endpoints answer only while a tab with your workspace is
 open. Close it and callers get a clear `503`. Reopen it and everything is back.
 
-See [`docs/data-storage-issue.md`](docs/data-storage-issue.md) for the full design
-and security model.
-
 ## ⚙️ Run it locally
 
 ```
 git clone https://github.com/ibr0r0/apeeye.git
 cd apeeye
 npm install
-cd server && npm install && cd ..
 ```
 
-**Option A — single process (what production runs):**
+**Option A — the way production runs:**
 
 ```
 npm run build:web        # builds the frontend into dist/
-npm run server           # relay serves dist/ and the /mock endpoints
+npm run relay            # wrangler dev: serves dist/ and the /mock endpoints
 ```
 
-Open http://localhost:34567.
+Open http://localhost:8787.
 
 **Option B — hot-reloading frontend during development:**
 
 ```
 # terminal 1
-npm run server
+npm run relay
 
 # terminal 2
-npm run web              # Expo dev server on :8081, talks to the relay on :34567
+npm run web              # Expo dev server on :8081, talks to the relay on :8787
 ```
 
 The frontend finds the relay automatically when served by it. When running Expo
-separately, it defaults to `http://localhost:34567`; override with
+separately, it defaults to `http://localhost:8787`; override with
 `EXPO_PUBLIC_RELAY_URL` (see `.env.example`).
 
 ## Usage
@@ -82,21 +78,21 @@ Endpoint reference, examples and limits are in the in-app **Docs** tab.
 
 ## 🚀 Deployment
 
-Apeeye is **one service**: the relay serves the built frontend and the `/mock`
-endpoints. It needs a long-lived Node process because of WebSockets, so
-**serverless hosts (Vercel/Netlify functions) are not supported.** Fly, Railway
-and Render work. A `render.yaml` blueprint is included.
-
-Build and start:
+Apeeye runs on **Cloudflare Workers**. A Worker serves the built frontend and
+routes `/mock/<workspace>/*`; one **Durable Object** per workspace holds that
+workspace's WebSocket and forwards requests to it. Nothing is stored anywhere.
 
 ```
-npm install && npx expo export --platform web && (cd server && npm install)
-node server/index.js
+npx wrangler login
+npm run deploy
 ```
 
-No disk, no database, no storage env vars. Health check at `/health`. Optional
-transport-level tuning (rate limits, timeouts, body caps) is in
-`server/.env.example`.
+`wrangler.toml` binds the custom domain `apeeye.ibr0r.com`; Cloudflare creates
+the DNS record and certificate on first deploy. Health check at `/health`.
+
+Per-IP rate limiting is enforced by a small Durable Object keyed by client IP,
+with the Workers rate-limiting binding as a fast first pass. Timeouts, body caps
+and per-workspace quotas live in `server/relay-core.js`.
 
 ## 🔒 Security
 
@@ -105,7 +101,7 @@ capability: anyone with the URL can read and write that workspace. Reset rotates
 
 The relay is hardened for public exposure:
 
-- Helmet security headers with a strict CSP; `x-powered-by` disabled
+- Strict CSP, HSTS, nosniff, frame denial and a same-origin check on the WebSocket endpoint
 - Per-IP and per-workspace rate limits, body size cap, relayed-frame cap,
   max in-flight requests per workspace, unregistered sockets dropped in 5 s
 - A tab can only answer requests for its own workspace; forged replies are ignored
@@ -121,14 +117,15 @@ This is a mocking tool. Do not put real user data in it.
 npm test
 ```
 
-Unit tests for the shared mock engine, workspace ID and import validation, plus
-integration tests that boot the real relay and drive it with a fake tab over
-WebSocket. Zero test dependencies; uses Node's built-in runner.
+Unit tests for the shared mock engine, wire chunking, response hygiene,
+workspace ID and import validation, plus integration tests that boot the real
+Worker under `wrangler dev` and drive it with a fake tab over WebSocket. Uses
+Node's built-in runner.
 
 ## Tech Stack
 
 - **Frontend:** React Native Web via Expo, IndexedDB, WebSocket
-- **Relay:** Express 5 + `ws`, stateless
+- **Relay:** Cloudflare Workers + Durable Objects, stateless
 - **Shared:** a storage-agnostic mock engine used by both the UI and relayed requests
 
 ## Roadmap
@@ -155,7 +152,7 @@ Thanks for helping improve **Apeeye** 🙌
 ---
 
 - ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
-- ![Relay: Express.js](https://img.shields.io/badge/Relay-Express.js-brightgreen)
+- ![Relay: Cloudflare Workers](https://img.shields.io/badge/Relay-Cloudflare%20Workers-orange)
 - ![Frontend: Expo](https://img.shields.io/badge/Frontend-Expo-blue)
 - ![Storage: your browser](https://img.shields.io/badge/Storage-your%20browser-yellow)
 - ![REST Support](https://img.shields.io/badge/API-RESTful-c42)

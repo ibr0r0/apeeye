@@ -44,3 +44,4 @@ server/.env
 .wrangler/
 .dev.vars
 wrangler.toml
+ME.md

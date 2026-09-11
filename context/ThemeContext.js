@@ -139,6 +139,17 @@ export function ThemeProvider({ children }) {
     return { ...p, button: p.accent, buttonText: '#ffffff', toggleText: p.secondary, muted: p.secondary };
   }, [isDark]);
 
+  useEffect(() => {
+    const doc = globalThis.document;
+    if (!isWeb || !doc) return;
+    doc.documentElement.style.backgroundColor = colors.background;
+    doc.body.style.backgroundColor = colors.background;
+    doc.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
+    let meta = doc.querySelector('meta[name="theme-color"]');
+    if (!meta) { meta = doc.createElement('meta'); meta.name = 'theme-color'; doc.head.appendChild(meta); }
+    meta.content = colors.background;
+  }, [colors.background, isDark]);
+
   const toggleTheme = useCallback((point) => {
     const next = isDark ? 'light' : 'dark';
     switchWithTransition(() => setMode(next), point);

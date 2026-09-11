@@ -253,6 +253,35 @@ describe('relay (workers)', () => {
     await tab.close();
   });
 
+  test('cross-site Origin on /ws is refused; same-origin and no-origin are fine', async () => {
+    const evil = new WebSocket(`${wsBase}/${WS_ID}`, { headers: { origin: 'https://evil.example' } });
+    const status = await new Promise((resolve) => {
+      evil.on('unexpected-response', (req, res) => resolve(res.statusCode));
+      evil.on('open', () => resolve('open'));
+      evil.on('error', () => {});
+    });
+    assert.equal(status, 403);
+    const same = new WebSocket(`${wsBase}/${WS_ID}`, { headers: { origin: base } });
+    await new Promise((resolve, reject) => { same.on('open', resolve); same.on('error', reject); });
+    same.close();
+  });
+
+  test('tab-controlled caching and CORS headers are stripped', async () => {
+    const tab = connectTab(WS_ID, { reply: { status: 200, headers: { 'cache-control': 'public, max-age=99999', 'access-control-allow-origin': 'https://evil.example', expires: 'Thu, 01 Jan 2099 00:00:00 GMT' }, body: { ok: true } } });
+    await tab.registered;
+    const r = await fetch(`${base}/mock/${WS_ID}/users`);
+    assert.equal(r.headers.get('cache-control'), null);
+    assert.equal(r.headers.get('expires'), null);
+    assert.equal(r.headers.get('access-control-allow-origin'), '*');
+    await tab.close();
+  });
+
+  test('per-IP limiter refuses a burst', async () => {
+    const results = await Promise.all(Array.from({ length: 75 }, () => fetch(`${base}/mock/${OTHER_ID}/burst`)));
+    const codes = results.map((r) => r.status);
+    assert.ok(codes.includes(429), `expected some 429s, got ${JSON.stringify(codes.reduce((a, c) => ({ ...a, [c]: (a[c] || 0) + 1 }), {}))}`);
+  });
+
   test('old /api routes are gone (410)', async () => {
     assert.equal((await fetch(`${base}/api/endpoints`)).status, 410);
   });
@@ -260,7 +289,11 @@ describe('relay (workers)', () => {
   test('security headers on every response; SPA served for unknown paths', async () => {
     const r = await fetch(`${base}/health`);
     assert.equal(r.headers.get('x-content-type-options'), 'nosniff');
-    assert.match(r.headers.get('content-security-policy'), /connect-src 'self' ws: wss:/);
+    const csp = r.headers.get('content-security-policy');
+    assert.match(csp, /connect-src 'self' wss:\/\/[^ ;]+ ws:\/\/[^ ;]+/);
+    assert.doesNotMatch(csp, /connect-src[^;]*\swss:\s/);
+    assert.match(r.headers.get('strict-transport-security'), /max-age=31536000/);
+    assert.equal(r.headers.get('x-frame-options'), 'DENY');
     const page = await fetch(`${base}/some/deep/link`);
     assert.equal(page.status, 200);
     assert.match(page.headers.get('content-type'), /text\/html/);

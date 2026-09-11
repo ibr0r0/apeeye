@@ -16,9 +16,17 @@ run_worker_first = true
 name = "WORKSPACES"
 class_name = "WorkspaceDO"
 
+[[durable_objects.bindings]]
+name = "IP_LIMITS"
+class_name = "IpLimitDO"
+
 [[migrations]]
 tag = "v1"
 new_sqlite_classes = ["WorkspaceDO"]
+
+[[migrations]]
+tag = "v2"
+new_sqlite_classes = ["IpLimitDO"]
 
 [[unsafe.bindings]]
 name = "IP_LIMITER"

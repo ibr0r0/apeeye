@@ -81,15 +81,20 @@ function pickJsonFile() {
     const input = doc.createElement('input');
     input.type = 'file';
     input.accept = 'application/json,.json';
+    let settled = false;
+    const finish = (fn, v) => { if (settled) return; settled = true; globalThis.removeEventListener('focus', onFocus); fn(v); };
+    const onFocus = () => setTimeout(() => { if (!input.files || !input.files.length) finish(resolve, null); }, 600);
     input.onchange = () => {
       const file = input.files && input.files[0];
-      if (!file) return resolve(null);
-      if (file.size > 50 * 1024 * 1024) return reject(new Error('File is too large (max 50MB)'));
+      if (!file) return finish(resolve, null);
+      if (file.size > 50 * 1024 * 1024) return finish(reject, new Error('File is too large (max 50MB)'));
       const reader = new FileReader();
-      reader.onload = () => resolve(String(reader.result));
-      reader.onerror = () => reject(new Error('Could not read file'));
+      reader.onload = () => finish(resolve, String(reader.result));
+      reader.onerror = () => finish(reject, new Error('Could not read file'));
       reader.readAsText(file);
     };
+    input.oncancel = () => finish(resolve, null);
+    globalThis.addEventListener('focus', onFocus, { once: true });
     input.click();
   });
 }

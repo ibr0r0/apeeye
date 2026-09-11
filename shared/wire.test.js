@@ -42,4 +42,11 @@ describe('wire', () => {
     assert.throws(() => r.push(JSON.stringify({ type: 'chunk', id: 'z', i: 0, n: 2, data: 'q'.repeat(101) })), /too large/);
     assert.equal(r.parts.size, 0);
   });
+
+  test('the cap applies across all partial messages, not just one', () => {
+    const r = new Reassembler(100);
+    r.push(JSON.stringify({ type: 'chunk', id: 'a', i: 0, n: 2, data: 'q'.repeat(60) }));
+    assert.throws(() => r.push(JSON.stringify({ type: 'chunk', id: 'b', i: 0, n: 2, data: 'q'.repeat(60) })), /too large/);
+    assert.equal(r.parts.size, 0);
+  });
 });

@@ -5,7 +5,22 @@ All notable changes to Apeeye are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project uses [Semantic Versioning](https://semver.org/).
 
-## [2.0.1]
+## [2.0.1] - 2026-09-11
+
+### Security
+- Per-IP rate limiting is now enforced by a Durable Object keyed by client IP.
+  A live test showed the Workers rate-limiting binding never refused a request
+  in production; it is kept only as a fast first pass.
+- The WebSocket endpoint refuses cross-site browser connections (Origin must be
+  absent, same-origin, or localhost), closing off cross-site takeover from a
+  malicious page.
+- HSTS and a Permissions-Policy header on every response.
+- `connect-src` in the CSP is pinned to the app's own host instead of any
+  `ws:`/`wss:` host.
+- Tabs can no longer set caching or CORS headers on relayed responses
+  (`cache-control`, `expires`, `vary`, `access-control-*` are stripped).
+- The chunk reassembly buffer is capped across all in-progress messages per
+  socket, not per message.
 
 ### Changed
 - The relay now runs on **Cloudflare Workers + Durable Objects** instead of an

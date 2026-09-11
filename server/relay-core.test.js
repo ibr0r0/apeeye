@@ -1,6 +1,6 @@
 const { test, describe } = require('node:test');
 const assert = require('node:assert/strict');
-const { buildResponse, securityHeaders, corsHeaders, WORKSPACE_ID_RE } = require('./relay-core');
+const { buildResponse, securityHeaders, corsHeaders, originAllowed, WORKSPACE_ID_RE } = require('./relay-core');
 
 describe('buildResponse', () => {
   test('passes status and JSON body, forces content-type', async () => {
@@ -12,8 +12,8 @@ describe('buildResponse', () => {
   });
 
   test('strips dangerous headers', () => {
-    const r = buildResponse({ status: 200, headers: { 'set-cookie': 'a=1', location: 'https://evil', 'content-security-policy': 'x', 'strict-transport-security': 'y' }, body: null });
-    for (const h of ['set-cookie', 'location', 'content-security-policy', 'strict-transport-security']) assert.equal(r.headers.get(h), null);
+    const r = buildResponse({ status: 200, headers: { 'set-cookie': 'a=1', location: 'https://evil', 'content-security-policy': 'x', 'strict-transport-security': 'y', 'cache-control': 'public', 'access-control-allow-origin': 'https://evil' }, body: null });
+    for (const h of ['set-cookie', 'location', 'content-security-policy', 'strict-transport-security', 'cache-control', 'access-control-allow-origin']) assert.equal(r.headers.get(h), null);
   });
 
   test('neutralises redirects and bad statuses', () => {
@@ -45,10 +45,19 @@ describe('buildResponse', () => {
 
 describe('headers', () => {
   test('security headers', () => {
-    const h = securityHeaders(new Headers());
+    const h = securityHeaders(new Headers(), 'apeeye.example');
     assert.equal(h.get('x-content-type-options'), 'nosniff');
-    assert.match(h.get('content-security-policy'), /connect-src 'self' ws: wss:/);
+    assert.match(h.get('content-security-policy'), /connect-src 'self' wss:\/\/apeeye\.example ws:\/\/apeeye\.example/);
     assert.match(h.get('content-security-policy'), /frame-ancestors 'none'/);
+    assert.match(h.get('strict-transport-security'), /max-age=31536000/);
+  });
+  test('origin allowlist for the websocket endpoint', () => {
+    assert.equal(originAllowed(null, 'apeeye.example'), true);
+    assert.equal(originAllowed('https://apeeye.example', 'apeeye.example'), true);
+    assert.equal(originAllowed('http://localhost:8081', 'apeeye.example'), true);
+    assert.equal(originAllowed('https://evil.example', 'apeeye.example'), false);
+    assert.equal(originAllowed('https://apeeye.example.evil.com', 'apeeye.example'), false);
+    assert.equal(originAllowed('garbage', 'apeeye.example'), false);
   });
   test('cors headers', () => {
     const h = corsHeaders(new Headers());
