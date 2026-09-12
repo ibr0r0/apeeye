@@ -140,7 +140,6 @@ Thanks for helping improve **Apeeye** 🙌
 ---
 
 - ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
-- ![Relay: Cloudflare Workers](https://img.shields.io/badge/Relay-Cloudflare%20Workers-orange)
 - ![Frontend: Expo](https://img.shields.io/badge/Frontend-Expo-blue)
 - ![Storage: your browser](https://img.shields.io/badge/Storage-your%20browser-yellow)
 - ![REST Support](https://img.shields.io/badge/API-RESTful-c42)
